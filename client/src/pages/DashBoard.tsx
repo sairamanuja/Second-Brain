@@ -7,17 +7,37 @@ import { ShareIcon } from "../icons/Shareicon";
 import { PlusIcon } from "../icons/PlusIcon";
 import { useContent } from "../hooks/useContent";
 import { Card } from "../components/card";
+import axios from "axios";
+import { BACKEND_URL } from "../config";
 
 export function DashBoard() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const [type, setType] = useState(""); // Initialize with a default type
 
   useEffect(() => {
     if (!token) {
       navigate("/signin");
     }
   }, [token, navigate]);
+
+  const handleTypeSelect = (selectedType: string) => {
+    setType(selectedType); // Update the type state
+  };
+
+  async function ShareBrain() {
+    const response = await axios.post(`${BACKEND_URL}/api/v1/brain/share`, {
+      share: true
+    }, {
+      headers: {
+        "Authorization": localStorage.getItem("token") // Passing the authorization token in the request header
+      }
+    });
+
+    const shareUrl = `http://localhost:5173/share/${response.data.hash}`;
+    alert(shareUrl);
+  }
 
   const handleClose = () => {
     setIsOpen(false);
@@ -35,7 +55,7 @@ export function DashBoard() {
 
   return (
     <div className="">
-      <SideBar />
+      <SideBar onSelectType={handleTypeSelect} />
       <div className="p-4 ml-72 min-h-screen bg-gray-100">
         <CreateContentModal open={isOpen} onClose={handleClose} />
         <div className="flex justify-end gap-2">
@@ -49,21 +69,24 @@ export function DashBoard() {
           />
           <Button
             variant="secondary"
+            onClick={ShareBrain}
             startIcon={<ShareIcon />}
             text="Share Brain"
           />
         </div>
         <div className="flex gap-4 flex-wrap">
-          {contents.map(({ type, link, title, content, _id }) => (
-            <Card
-              key={_id}
-              type={type}
-              link={link}
-              title={title}
-              content={content}
-              id={_id}
-            />
-          ))}
+          {contents
+            .filter(({ type: contentType }) => !type || contentType === type)
+            .map(({ type, link, title, content, _id }) => (
+              <Card
+                key={_id}
+                type={type}
+                link={link}
+                title={title}
+                content={content}
+                id={_id}
+              />
+            ))}
         </div>
       </div>
     </div>
