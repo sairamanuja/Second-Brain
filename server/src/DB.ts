@@ -1,8 +1,14 @@
 import mongoose from "mongoose";
+import dotenv from "dotenv"
+
+dotenv.config();
 
 export const connectDB = async () => {
 try {
-   const connect = await mongoose.connect("mongodb+srv://ramanuja39:sairama%40123@cluster0.580qe.mongodb.net/SecondBrain");
+   if (!process.env.MONGO_URI) {
+     throw new Error("MONGO_URI is not defined in environment variables");
+   }
+   const connect = await mongoose.connect(process.env.MONGO_URI);
    console.log(` ${connect.connection.host}`);
 } catch (error) {
     console.log(error);
