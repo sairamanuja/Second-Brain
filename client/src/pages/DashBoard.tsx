@@ -47,7 +47,7 @@ export function DashBoard() {
 
   useEffect(() => {
     refresh();
-  }, [!isOpen]);
+  }, [refresh]);
 
   if (!token) {
     return null;

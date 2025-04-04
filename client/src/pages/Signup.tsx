@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { BACKEND_URL } from '../config';
 import { API } from '../config/API';
-import axios from "axios"
 import { useNavigate } from 'react-router-dom';
 
 export const Signup = () => {

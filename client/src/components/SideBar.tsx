@@ -2,7 +2,6 @@ import { Logo } from "../icons/Logo";
 import { TwitterIcon } from "../icons/TwitterIcon";
 import { YoutubeIcon } from "../icons/YoutubeIcon";
 import {SideBarItems } from "./SideBarItems";
-import { useState } from "react";
 import { DocumentIcon } from "../icons/DocumentIcon";
 import React from 'react';
 

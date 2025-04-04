@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { navigate, useNavigate } from 'react-router-dom';
+import {  useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BACKEND_URL } from '../config';
 export const Signin = () => {
-    // Ensure state variables are defined
+    
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');

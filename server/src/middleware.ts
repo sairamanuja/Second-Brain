@@ -1,7 +1,10 @@
 import { NextFunction, Request, Response } from "express";
+import dotenv from "dotenv";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
-const JWT_PASSWORD = "MANISH12";
+dotenv.config();
+const JWT_PASSWORD = process.env.JWT_SECRET;
+console.log(JWT_PASSWORD);
 // @ts-ignore
 export const userMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
@@ -13,6 +16,12 @@ export const userMiddleware = (req: Request, res: Response, next: NextFunction) 
     }
 
     const token = authHeader.split(' ')[1]; // Extract the token part after 'Bearer '
+    
+    if (!JWT_PASSWORD) {
+        return res.status(500).json({
+            message: "Server configuration error"
+        });
+    }
     
     try {
         const decoded = jwt.verify(token, JWT_PASSWORD);

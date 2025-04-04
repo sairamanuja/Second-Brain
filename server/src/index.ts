@@ -7,12 +7,14 @@ import { connectDB, User, Content, Link } from "./DB";
 import bcrypt from "bcrypt";
 import { z } from "zod";
 import { random } from "./config";
+import dotenv from "dotenv";
 import cors from "cors";
 
 app.use(cors({
     origin: "http://localhost:5173"
 })); 
-const JWT_SECRET = "MANISH12";
+dotenv.config();
+const JWT_SECRET = process.env.JWT_SECRET;
 app.use(express.json());
 //@ts-ignore
 app.post("/api/v1/signup", async (req, res) => {
@@ -75,7 +77,7 @@ app.post("/api/v1/signin", async (req, res) => {
         if (existingUser && await bcrypt.compare(password, existingUser.password)) {
             const token = jwt.sign({
                 id: existingUser._id
-            }, JWT_SECRET)
+            }, JWT_SECRET as string)
 
             res.status(200).json({
                 token,
