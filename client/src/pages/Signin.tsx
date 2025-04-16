@@ -54,7 +54,7 @@ export const Signin = () => {
                     <p className="text-sm text-center lg:text-left text-gray-500">
                         Don't have an account?{' '}
                         <Link
-  to="/signup"  // ← Uses `to` instead of `href`
+  to="/"  // ← Uses `to` instead of `href`
   className="text-pt hover:underline"
 >
   Sign Up

@@ -66,7 +66,7 @@ export const Signup = () => {
   to="/signin"  
   className="text-pt hover:underline"
 >
-  Sign Up
+  Sign in
 </Link>
                     </p>
                     <div className="flex flex-col items-center lg:items-start pt-4 gap-4">

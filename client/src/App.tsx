@@ -11,7 +11,7 @@ function App() {
     <>
     <BrowserRouter>
     <Routes>
-    <Route path="/signup" element={<Signup />} /> {/* Route for signup page */}
+    <Route path="/" element={<Signup />} /> {/* Route for signup page */}
         <Route path="/dashboard" element={<DashBoard />} /> 
         <Route path="/signin" element={<Signin />} /> {/* Route for signup page */}
         <Route path="/share/:hash" element={<SharedContent />} /> {/* New route */}

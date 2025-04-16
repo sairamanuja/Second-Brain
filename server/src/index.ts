@@ -10,9 +10,8 @@ import { random } from "./config";
 import dotenv from "dotenv";
 import cors from "cors";
 import { Request, Response } from "express";
-app.use(cors({
-    origin: "http://localhost:5173"
-})); 
+app.use(cors());
+
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
 app.use(express.json());
