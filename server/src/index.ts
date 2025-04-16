@@ -20,7 +20,7 @@ app.use(express.json());
 app.post("/api/v1/signup", async (req, res) => {
     const schema = z.object({
         username: z.string().min(3).max(30),
-        password: z.string().min(8).max(20)
+        password: z.string().min(5).max(20)
     })
     const parsed = schema.safeParse(req.body);
     
@@ -60,7 +60,7 @@ app.post("/api/v1/signup", async (req, res) => {
 app.post("/api/v1/signin", async (req, res) => {
     const schema = z.object({
         username: z.string().min(3).max(30),
-        password: z.string().min(8).max(20)
+        password: z.string().min(5).max(20)
     })
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) {
@@ -173,21 +173,18 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
 app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
     const { share } = req.body;
     if (share) {
-        // Check if a link already exists for the user.
         const existingLink = await Link.findOne({ userId: req.userId });
         if (existingLink) {
             res.json({ hash: existingLink.hash }); // Send existing hash if found.
             return;
         }
 
-        // Generate a new hash for the shareable link.
         const hash = random(10);
         await Link.create({ userId: req.userId, hash });
         res.json({ hash }); // Send new hash in the response.
     } else {
-        // Remove the shareable link if share is false.
         await Link.deleteOne({ userId: req.userId });
-        res.json({ message: "Removed link" }); // Send success response.
+          res.json({ message: "Removed link" }); // Send success response.
     }
 });
 
