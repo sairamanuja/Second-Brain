@@ -2,7 +2,6 @@ import { ShareIcon } from "../icons/Shareicon";
 import { DeleteIcon } from "../icons/Deleteicon";
 import { useEffect } from "react";
 import axios from 'axios';
-import { BACKEND_URL } from "../config";
 
 interface CardProps {
     title: string; // Title of the card, e.g., video or tweet title
@@ -41,7 +40,7 @@ export function Card({ title, link, type, content, id, onDelete }: CardProps) {
 
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.delete(BACKEND_URL + "/api/v1/content", {
+            const response = await axios.delete( "https://second-brain-0z65.onrender.com/api/v1/content", {
                 headers: {
                     Authorization: token, // Add your token here
                 },
@@ -84,8 +83,9 @@ export function Card({ title, link, type, content, id, onDelete }: CardProps) {
                         </div>
                     </div>
                 </div>
-                <div className="pt-2">
-                        <p>{content}</p>
+                <div className="pt-2 ">
+                        {/* Content Section */}
+                        <p className="overflow-auto">{content}</p>
                     </div>
 
                 {/* Content Section */}
@@ -114,16 +114,18 @@ export function Card({ title, link, type, content, id, onDelete }: CardProps) {
 
                     {/* Render document link if type is "document" */}
                     {type === "document" && (
-                <p>
-                    <a
-                        href={link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        {link}
-                    </a>
-                </p>
-            )}
+    <div className="mt-2 overflow-hidden">
+        <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-blue-600 hover:underline truncate text-sm"
+            title={link} // Shows full link on hover
+        >
+            {link.replace(/^https?:\/\//, '')} // Removes http(s):// for cleaner display
+        </a>
+    </div>
+)}
                 </div>
             </div>
         </div>

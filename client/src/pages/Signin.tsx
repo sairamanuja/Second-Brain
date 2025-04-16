@@ -1,35 +1,35 @@
 import React, { useState } from 'react';
 import {  useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { BACKEND_URL } from '../config';
+import { Link } from 'react-router-dom';
+
+
+        
 export const Signin = () => {
     
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [message, setMessage] = useState('');
     const navigate = useNavigate();
   
-   
     const handleSignup = async (e:React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const response = await axios.post(BACKEND_URL+"/api/v1/signin",{
-           username:email,
-           password:password 
-        }) 
-        const token = response.data.token;
-        console.log(token)
-        if (token) {
-            localStorage.setItem("token", `Bearer ${token}`);
+        try {
+            const response = await axios.post("https://second-brain-0z65.onrender.com/api/v1/signin", {
+                username: email,
+                password: password 
+            });
+            
+            const token = response.data.token;
+            if (token) {
+                localStorage.setItem("token", `Bearer ${token}`);
+                alert("User signin successful");
+                navigate("/dashboard");
+            }
+        } catch (error) {
+            alert("Signin failed. Please check your credentials.");
+            console.error("Signin error:", error);
         }
-        if(token){
-            alert("user Signin sucessfull")
-            navigate("/dashboard");
-        }
-        console.log(response)
-        console.log(email)
-        console.log(password)
-    
     };
 
     return (
@@ -53,12 +53,12 @@ export const Signin = () => {
                     </div>
                     <p className="text-sm text-center lg:text-left text-gray-500">
                         Don't have an account?{' '}
-                        <a
-                            href="http://localhost:5173/signup"
-                            className="text-pt hover:underline"
-                        >
-                            Sign Up
-                        </a>
+                        <Link
+  to="/signup"  // ← Uses `to` instead of `href`
+  className="text-pt hover:underline"
+>
+  Sign Up
+</Link>
                     </p>
                     <div className="flex flex-col items-center lg:items-start pt-4 gap-4">
                         <form
@@ -70,7 +70,7 @@ export const Signin = () => {
                                 id="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                type="email"
+                                type="text"
                                 placeholder="Username"
                                 className="p-2 rounded-lg w-full border border-gray-300"
                             />
@@ -86,12 +86,7 @@ export const Signin = () => {
                             />
 
 
-                            {message && (
-                                <p className={`text-sm ${message.includes('failed') ? 'text-red-500' : 'text-green-500'}`}>
-                                    {message}
-                                </p>
-                            )}
-
+                           
                             <button
                                 className="bg-[#f03794] text-white p-2 rounded-lg w-full"
                                 type="submit"

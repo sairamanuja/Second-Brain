@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { API } from '../config/API';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 export const Signup = () => {
 
@@ -20,7 +21,7 @@ export const Signup = () => {
             return; 
         }
 
-        const response = await API.post("/api/v1/signup",{
+        const response = await axios.post("https://second-brain-0z65.onrender.com/api/v1/signup",{
           username:username,
           password:password
         });
@@ -61,12 +62,12 @@ export const Signup = () => {
                     </div>
                     <p className="text-sm text-center lg:text-left text-gray-500">
                         Already have an account?{' '}
-                        <a
-                            href="http://localhost:5173/signin"
-                            className="text-pt hover:underline"
-                        >
-                            Login
-                        </a>
+                        <Link
+  to="/signin"  
+  className="text-pt hover:underline"
+>
+  Sign Up
+</Link>
                     </p>
                     <div className="flex flex-col items-center lg:items-start pt-4 gap-4">
                         <form

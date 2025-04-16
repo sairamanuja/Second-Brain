@@ -2,7 +2,7 @@ import { CrossIcon } from "../icons/CrossIcon";
 import { Input } from "./Input";
 import { useState, useRef } from "react";
 import { Button } from "./Button";
-import { BACKEND_URL } from "../config";
+
 import axios from "axios";
 
 enum ContentType {
@@ -30,7 +30,7 @@ export function CreateContentModal({open, onClose, onContentAdded}: CreateConten
         const content = ContentRef.current?.value;
 
         try {
-            await axios.post(`${BACKEND_URL}/api/v1/content`, {
+            await axios.post(`https://second-brain-0z65.onrender.com/api/v1/content`, {
                 link,
                 title,
                 type,

@@ -9,7 +9,7 @@ import { z } from "zod";
 import { random } from "./config";
 import dotenv from "dotenv";
 import cors from "cors";
-
+import { Request, Response } from "express";
 app.use(cors({
     origin: "http://localhost:5173"
 })); 
@@ -168,7 +168,6 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
         });
     }
 })
-
 //@ts-ignore
 app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
     const { share } = req.body;
@@ -188,10 +187,40 @@ app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
     }
 });
 
+
+//@ts-ignore
+app.get("/api/v1/brain/share/:hash", async (req: Request, res: Response) => {
+    try {
+        const schema = z.object({
+            hash: z.string()
+        });
+        const parsed = schema.safeParse(req.params);
+
+        if (!parsed.success) {
+            return res.status(400).json({ message: "Invalid hash parameter" });
+        }
+
+        const { hash } = parsed.data;
+        const link = await Link.findOne({ hash });
+
+        if (!link) {
+            return res.status(404).json({ message: "Shared content not found" });
+        }
+
+        const content = await Content.find({ userId: link.userId });
+        res.status(200).json({ content });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});     
 const PORT = process.env.PORT || 3000;  // Port set to 3000
 
 connectDB();
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+
+
 
