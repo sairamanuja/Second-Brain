@@ -8,19 +8,20 @@ import axios from "axios";
 enum ContentType {
     Youtube = 'youtube',
     Twitter = 'twitter',
-    Document = "document"    
+    Document = "document"
 }
 
 interface CreateContentModalProps {
     open: boolean;
     onClose: () => void;
+    onContentAdded?: () => void;
 }
 
-export function CreateContentModal({open, onClose}: CreateContentModalProps) {
-    
+export function CreateContentModal({open, onClose, onContentAdded}: CreateContentModalProps) {
+
     const titleRef = useRef<HTMLInputElement>(null);
     const linkRef = useRef<HTMLInputElement>(null);
-    const ContentRef = useRef<HTMLInputElement>(null)
+    const ContentRef = useRef<HTMLTextAreaElement>(null)
     const [type, setType] = useState(ContentType.Youtube);
 
     async function addContent(){
@@ -28,27 +29,26 @@ export function CreateContentModal({open, onClose}: CreateContentModalProps) {
         const link = linkRef.current?.value;
         const content = ContentRef.current?.value;
 
-        await axios.post(`${BACKEND_URL}/api/v1/content`, {
-            link,
-            title,
-            type,
-            content
-        }, {
-            headers: {
-                "Authorization": localStorage.getItem("token") || "" // Including the authorization token
+        try {
+            await axios.post(`${BACKEND_URL}/api/v1/content`, {
+                link,
+                title,
+                type,
+                content
+            }, {
+                headers: {
+                    "Authorization": localStorage.getItem("token") || ""
+                }
+            });
+
+            if (onContentAdded) {
+                onContentAdded();
             }
-        });
 
-       
-
-
-        console.log(title)
-        console.log(link)
-        console.log(content)
-     
-       
-
-        onClose();
+            onClose();
+        } catch (error) {
+            console.error("Error adding content:", error);
+        }
     }
 
     return (
@@ -68,7 +68,7 @@ export function CreateContentModal({open, onClose}: CreateContentModalProps) {
                                     <h1>Add Content</h1>
                                     <Input reference={titleRef} placeholder="Title" />
                                     <Input reference={linkRef} placeholder="Link" />
-                                    <textarea id="message" ref={ContentRef}  class="block p-2.5 w-full text-sm text-gray-900  rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your content here..."></textarea>
+                                    <textarea id="message" ref={ContentRef} className="block p-2.5 w-full text-sm text-gray-900 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your content here..."></textarea>
 
                                 </div>
                                 <div>

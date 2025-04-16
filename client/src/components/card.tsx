@@ -9,7 +9,8 @@ interface CardProps {
     link: string;
     content: string;
     type: "twitter" | "youtube" | "document"; // Type of the content
-    id: string; 
+    id: string;
+    onDelete?: () => void; // Optional callback for when content is deleted
 }
 
 
@@ -33,8 +34,8 @@ const TwitterEmbed = ({ link }: { link: string }) => {
 };
 
 // The Card component represents a styled card that can display either a YouTube video or a Twitter embed based on the type prop.
-export  function Card({ title, link, type, content, id }: CardProps) {
-   
+export function Card({ title, link, type, content, id, onDelete }: CardProps) {
+
     async function deleteCard(id: string) {
         console.log("Card deleted:", { title, link, type, content, id });
 
@@ -46,6 +47,12 @@ export  function Card({ title, link, type, content, id }: CardProps) {
                 },
                 data: { contentId: id }
             });
+
+            // Call the onDelete callback if it exists to refresh content
+            if (onDelete) {
+                onDelete();
+            }
+
             console.log(response);
         } catch (error) {
             console.error("Error deleting card:", error);
@@ -60,9 +67,9 @@ export  function Card({ title, link, type, content, id }: CardProps) {
                 <div className="flex justify-between">
                     {/* Left Section: Title with Icon */}
                     <div className="flex items-center text-md">
-                       
-                        {title}
-                    </div>
+                    
+                       <h2 className="font-bold">{title}
+                       </h2>                     </div>
                     {/* Right Section: Links with Icons */}
                     <div className="flex items-center">
                         <div className="pr-2 text-gray-500">
@@ -84,7 +91,7 @@ export  function Card({ title, link, type, content, id }: CardProps) {
                 {/* Content Section */}
                 <div className="pt-4">
                     {/* Render YouTube embed if type is "youtube" */}
-                   
+
                     {type === "youtube" && (
                         <iframe
                             className="w-full"
@@ -101,7 +108,7 @@ export  function Card({ title, link, type, content, id }: CardProps) {
 
                     {/* Render Twitter embed if type is "twitter" */}
                     {type === "twitter" && (
-                       
+
                        <TwitterEmbed link={link}/>
                     )}
 

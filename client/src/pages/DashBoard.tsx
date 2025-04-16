@@ -45,10 +45,6 @@ export function DashBoard() {
 
   const { contents, refresh } = useContent();
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
   if (!token) {
     return null;
   }
@@ -57,7 +53,7 @@ export function DashBoard() {
     <div className="">
       <SideBar onSelectType={handleTypeSelect} />
       <div className="p-4 ml-72 min-h-screen bg-gray-100">
-        <CreateContentModal open={isOpen} onClose={handleClose} />
+        <CreateContentModal open={isOpen} onClose={handleClose} onContentAdded={refresh} />
         <div className="flex justify-end gap-2">
           <Button
             onClick={() => {
@@ -85,6 +81,7 @@ export function DashBoard() {
                 title={title}
                 content={content}
                 id={_id}
+                onDelete={refresh}
               />
             ))}
         </div>
