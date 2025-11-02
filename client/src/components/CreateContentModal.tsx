@@ -5,6 +5,7 @@ import { Button } from "./Button";
 import toast from 'react-hot-toast';
 
 import axios from "axios";
+import { BACKEND_URL } from "../config";
 
 enum ContentType {
     Youtube = 'youtube',
@@ -38,7 +39,7 @@ export function CreateContentModal({open, onClose, onContentAdded}: CreateConten
         const loadingToast = toast.loading('Adding content...');
 
         try {
-            await axios.post(`https://second-brain-0z65.onrender.com/api/v1/content`, {
+            await axios.post(`${BACKEND_URL}/api/v1/content`, {
                 link,
                 title,
                 type,

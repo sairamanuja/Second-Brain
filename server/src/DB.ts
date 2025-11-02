@@ -29,7 +29,7 @@ const ContentSchema = new mongoose.Schema({
     tags: [{type: mongoose.Schema.Types.ObjectId, ref: "tag"}],
     link: {type: String},
     userId:[ {type: mongoose.Schema.Types.ObjectId, ref: "User", required: true}],
-    
+    embedded: {type: Boolean, default: false}  // track if content has been embedded into pinecone
 });
 
 export const Content = mongoose.model("Content", ContentSchema);

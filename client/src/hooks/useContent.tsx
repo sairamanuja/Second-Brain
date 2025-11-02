@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
+import { BACKEND_URL } from "../config";
 
 
 export function useContent() {
@@ -7,7 +8,7 @@ export function useContent() {
 
     // Memoize the refresh function so it doesn't change on every render
     const refresh = useCallback(() => {
-        axios.get(`https://second-brain-0z65.onrender.com/api/v1/content`, {
+        axios.get(`${BACKEND_URL}/api/v1/content`, {
             headers: {
                 "Authorization": localStorage.getItem("token")
             }

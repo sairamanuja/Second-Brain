@@ -10,9 +10,25 @@ import { random } from "./config";
 import dotenv from "dotenv";
 import cors from "cors";
 import { Request, Response } from "express";
-app.use(cors());
+import { extractContent } from "./services/extractor";
+import { indexContent, searchContent, generateAnswer } from "./services/embedding";
+app.use(cors({ origin: "http://localhost:5173" }));
 
 dotenv.config();
+
+// TODO: move this to a background job later (bull/agenda)
+async function processContent(contentId: string, userId: string, link: string, type: string, title: string) {
+    console.log("processing content for embedding:", contentId);
+    let text = await extractContent(link, type, title);
+    // cap at 5k chars (~10 chunks) — full transcripts cause OOM, 5k is enough for RAG
+    if (text.length > 5000) {
+        console.log(`text too long (${text.length} chars), truncating to 5000`);
+        text = text.slice(0, 5000);
+    }
+    await indexContent(contentId, userId, text, title, link, type);
+    await Content.updateOne({ _id: contentId }, { embedded: true });
+    console.log("embedding done for:", contentId);
+}
 const JWT_SECRET = process.env.JWT_SECRET;
 app.use(express.json());
 //@ts-ignore
@@ -50,6 +66,7 @@ app.post("/api/v1/signup", async (req, res) => {
             success: true
         })
     } catch(e) {
+        console.error("signup error:", e);
         res.status(500).json({
             message: "Internal server error"
         })
@@ -88,6 +105,7 @@ app.post("/api/v1/signin", async (req, res) => {
             })
         }
     } catch (e) {
+        console.error("signin error:", e);
         res.status(500).json({
             message: "Internal server error"
         });
@@ -111,7 +129,7 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
     }
 
     const { link, type, content, title } = parsed.data;
-    await Content.create({
+    const savedContent = await Content.create({
         link,
         type,
         content,
@@ -119,6 +137,10 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
         userId: req.user.Id,
         tags: []
     });
+
+    // fire and forget - don't block the response for embedding
+    processContent(savedContent._id.toString(), req.user.Id, link, type, title)
+        .catch(err => console.error("embedding failed:", err));
 
     res.status(201).json({
         message: "Content added"
@@ -147,12 +169,14 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
     }
 
     try {
-        const content = await Content.deleteOne({
+        const deleted = await Content.deleteOne({
             _id: contentId,
             userId
         });
 
-        if (content.deletedCount > 0) {
+        if (deleted.deletedCount > 0) {
+            // TODO: also delete vectors from Pinecone - need to delete by prefix contentId_chunk_*
+            // Pinecone free tier doesn't support prefix delete, so skipping for now
             res.status(200).json({
                 message: "Content deleted"
             });
@@ -167,6 +191,59 @@ app.delete("/api/v1/content", userMiddleware, async (req, res) => {
         });
     }
 })
+// reindex all content that hasn't been embedded yet
+//@ts-ignore
+app.post("/api/v1/reindex", userMiddleware, async (req, res) => {
+    const userId = req.user.Id;
+    try {
+        const items = await Content.find({ userId, embedded: false });
+        console.log(`reindexing ${items.length} items for user ${userId}`);
+
+        res.json({ message: `Reindexing ${items.length} items in background...` });
+
+        // fire and forget each one
+        for (const item of items) {
+            processContent(item._id.toString(), userId, item.link || "", item.type, item.title)
+                .catch(err => console.error("reindex failed for", item._id, err));
+        }
+    } catch (e) {
+        console.error("reindex error:", e);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// TODO: add zod validation
+//@ts-ignore
+app.post("/api/v1/brain/query", userMiddleware, async (req, res) => {
+    const query = req.body.query;
+    const userId = req.user.Id;
+
+    if (!query) {
+        return res.status(400).json({ message: "query is required" });
+    }
+
+    try {
+        const results = await searchContent(query, userId);
+
+        if (results.length === 0) {
+            return res.json({
+                answer: "I couldn't find anything relevant in your saved content.",
+                sources: []
+            });
+        }
+
+        const answer = await generateAnswer(query, results);
+
+        res.json({
+            answer,
+            sources: results.map(r => ({ title: r.title, score: r.score, link: r.link, type: r.type }))
+        });
+    } catch (err) {
+        console.error("query route failed:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 //@ts-ignore
 app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
     const { share } = req.body;

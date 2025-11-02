@@ -8,9 +8,10 @@ import { Bars3Icon as MenuIcon, XMarkIcon as XIcon } from "@heroicons/react/24/o
 
 interface SideBarProps {
   onSelectType: (type: string) => void;
+  onAskBrain?: () => void;
 }
 
-export const SideBar: React.FC<SideBarProps> = ({ onSelectType }) => {
+export const SideBar: React.FC<SideBarProps> = ({ onSelectType, onAskBrain }) => {
   const [isOpen, setIsOpen] = useState(false);
   const handleTypeSelect = (type: string) => {
     onSelectType(type);
@@ -58,6 +59,17 @@ export const SideBar: React.FC<SideBarProps> = ({ onSelectType }) => {
           <SideBarItems text="Twitter" icon={<TwitterIcon />} onclick={() => handleTypeSelect('twitter')} />
           <SideBarItems text="Youtube" icon={<YoutubeIcon />} onclick={() => handleTypeSelect('youtube')} />
           <SideBarItems text="Document" icon={<DocumentIcon />} onclick={() => handleTypeSelect('document')} />
+        </div>
+
+        {/* ask brain button at bottom */}
+        <div className="absolute bottom-8 left-6 right-6">
+          <button
+            onClick={() => { onAskBrain?.(); if (window.innerWidth < 768) setIsOpen(false); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium text-sm hover:opacity-90 transition-all shadow-lg"
+          >
+            <span className="text-lg">🧠</span>
+            Ask your brain
+          </button>
         </div>
       </div>
 

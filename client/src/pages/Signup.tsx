@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { BACKEND_URL } from '../config';
 import toast, { Toaster } from 'react-hot-toast';
 
 export const Signup = () => {
@@ -23,7 +24,7 @@ export const Signup = () => {
         }
 
         try {
-            const response = await axios.post("https://second-brain-0z65.onrender.com/api/v1/signup", {
+            const response = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
                 username: username,
                 password: password
             });

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Card } from '../components/card';
+import { BACKEND_URL } from '../config';
 
 export function SharedContent() {
   const { hash } = useParams();
@@ -13,7 +14,7 @@ export function SharedContent() {
     const fetchSharedContent = async () => {
       try {
         const response = await axios.get(
-          `https://second-brain-0z65.onrender.com/api/v1/brain/share/${hash}`
+          `${BACKEND_URL}/api/v1/brain/share/${hash}`
         );
         setContents(response.data.content);
         setLoading(false);

@@ -10,3 +10,7 @@ export function random(len: number) {
 
     return ans;
 }
+
+export const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+export const PINECONE_API_KEY = process.env.PINECONE_API_KEY || "";
+export const PINECONE_INDEX_NAME = "second-brain";

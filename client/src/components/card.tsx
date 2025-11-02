@@ -2,6 +2,7 @@ import { ShareIcon } from "../icons/Shareicon";
 import { DeleteIcon } from "../icons/Deleteicon";
 import { useEffect } from "react";
 import axios from 'axios';
+import { BACKEND_URL } from "../config";
 
 interface CardProps {
     title: string; // Title of the card, e.g., video or tweet title
@@ -40,7 +41,7 @@ export function Card({ title, link, type, content, id, onDelete }: CardProps) {
 
         try {
             const token = localStorage.getItem("token");
-            const response = await axios.delete( "https://second-brain-0z65.onrender.com/api/v1/content", {
+            const response = await axios.delete(`${BACKEND_URL}/api/v1/content`, {
                 headers: {
                     Authorization: token, // Add your token here
                 },
