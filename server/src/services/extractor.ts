@@ -25,6 +25,12 @@ export async function extractContent(link: string, type: string, title?: string)
             console.log("fetching transcript for video:", videoId);
             const transcript = await YoutubeTranscript.fetchTranscript(videoId);
             const text = transcript.map((seg: any) => seg.text).join(" ");
+
+            // cap to 8000 chars — full transcripts can be 80K+ and blow up memory
+            if (text.length > 8000) {
+                console.log(`transcript too long (${text.length} chars), truncating to 8000`);
+                return text.slice(0, 8000);
+            }
             return text;
         }
 
@@ -59,6 +65,10 @@ export async function extractContent(link: string, type: string, title?: string)
             return title ? `${title} ${link}` : link;
         }
 
+        if (text.length > 8000) {
+            console.log(`article too long (${text.length} chars), truncating to 8000`);
+            text = text.slice(0, 8000);
+        }
         return text;
 
     } catch (err) {

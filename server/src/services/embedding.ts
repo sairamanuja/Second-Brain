@@ -1,40 +1,30 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { Pinecone } from "@pinecone-database/pinecone";
+// using raw fetch instead of SDKs — SDKs consumed too much memory on startup
+// gemini-embedding-001 with outputDimensionality=768 matches pinecone index
+// gemini-2.5-flash for generation (2.0-flash not available for new users)
 
-// NOTE: you need to create the Pinecone index manually in the dashboard:
-// Name: second-brain, Dimensions: 768, Metric: cosine
-
-// lazy init so dotenv has time to load before we read env vars
-let pineconeIndex: any = null;
-let genAI: GoogleGenerativeAI | null = null;
-
-function getGenAI() {
-    if (!genAI) {
-        genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-    }
-    return genAI;
-}
-
-function getPineconeIndex() {
-    if (!pineconeIndex) {
-        const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY || "" });
-        pineconeIndex = pc.index(process.env.PINECONE_INDEX_NAME || "second-brain");
-    }
-    return pineconeIndex;
-}
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY || "";
+const PINECONE_INDEX_HOST = process.env.PINECONE_INDEX_HOST || "";
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-    try {
-        const model = getGenAI().getGenerativeModel({ model: "gemini-embedding-001" });
-        const result = await model.embedContent({
-            content: { parts: [{ text }], role: "user" },
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${GEMINI_API_KEY}`;
+
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            content: { parts: [{ text }] },
             outputDimensionality: 768
-        } as any);
-        return result.embedding.values;
-    } catch (err) {
-        console.error("generateEmbedding failed:", err);
-        throw err;
+        })
+    });
+
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Gemini embedding failed (${res.status}): ${err}`);
     }
+
+    const data: any = await res.json();
+    return data.embedding.values;
 }
 
 export function chunkText(text: string): string[] {
@@ -45,85 +35,108 @@ export function chunkText(text: string): string[] {
         return [text];
     }
 
-    // character-based chunking with word boundary snapping
-    // sentence splitting doesn't work for youtube transcripts (no punctuation)
     const chunks: string[] = [];
-    let i = 0;
+    let start = 0;
 
-    while (i < text.length) {
-        let end = Math.min(i + CHUNK_SIZE, text.length);
+    while (start < text.length) {
+        let end = Math.min(start + CHUNK_SIZE, text.length);
 
-        // snap to nearest word boundary so we don't cut mid-word
+        // snap to word boundary
         if (end < text.length) {
             const lastSpace = text.lastIndexOf(" ", end);
-            if (lastSpace > i) end = lastSpace;
+            if (lastSpace > start) end = lastSpace;
         }
 
-        const chunk = text.slice(i, end).trim();
+        const chunk = text.slice(start, end).trim();
         if (chunk) chunks.push(chunk);
 
-        i = end - OVERLAP;
-        if (i <= 0) break;
+        if (end >= text.length) break;
+        start = end - OVERLAP;
+        if (start <= 0) start = end; // safety — always advance
     }
 
     return chunks;
 }
 
-export async function indexContent(contentId: string, userId: string, text: string, title: string, link: string = "", type: string = ""): Promise<void> {
+async function pineconeRequest(path: string, body: any) {
+    const res = await fetch(`https://${PINECONE_INDEX_HOST}${path}`, {
+        method: "POST",
+        headers: {
+            "Api-Key": PINECONE_API_KEY,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Pinecone ${path} failed (${res.status}): ${err}`);
+    }
+
+    return res.json();
+}
+
+export async function indexContent(
+    contentId: string,
+    userId: string,
+    text: string,
+    title: string,
+    link: string = "",
+    type: string = ""
+): Promise<void> {
     const chunks = chunkText(text);
     console.log(`indexing ${chunks.length} chunks for content ${contentId}`);
 
-    const vectors = [];
-
+    // one chunk at a time to keep memory low
     for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
         try {
             const embedding = await generateEmbedding(chunk);
-            vectors.push({
-                id: `${contentId}_chunk_${i}`,
-                values: embedding,
-                metadata: {
-                    contentId,
-                    userId,
-                    title: title.slice(0, 200),
-                    chunkIndex: i,
-                    text: chunk.slice(0, 500), // cap to stay under pinecone's 40KB/vector metadata limit
-                    link: link.slice(0, 300),
-                    type
-                }
+
+            await pineconeRequest("/vectors/upsert", {
+                vectors: [{
+                    id: `${contentId}_chunk_${i}`,
+                    values: embedding,
+                    metadata: {
+                        contentId,
+                        userId,
+                        title: title.slice(0, 200),
+                        chunkIndex: i,
+                        text: chunk.slice(0, 500),
+                        link: link.slice(0, 300),
+                        type
+                    }
+                }]
             });
+
+            console.log(`indexed chunk ${i + 1}/${chunks.length}`);
         } catch (err) {
-            console.error(`failed to embed chunk ${i} for content ${contentId}:`, err);
+            console.error(`failed chunk ${i}:`, err);
         }
     }
 
-    if (vectors.length === 0) {
-        console.log("no vectors to upsert for content", contentId);
-        return;
-    }
-
-    // TODO: fix types - pinecone metadata types are annoying
-    // pinecone SDK v7 uses { records: [...] } not a plain array
-    await getPineconeIndex().upsert({ records: vectors } as any);
-    console.log(`upserted ${vectors.length} vectors for content ${contentId}`);
+    console.log(`done indexing content ${contentId}`);
 }
 
-export async function searchContent(query: string, userId: string): Promise<Array<{text: string, title: string, score: number, link: string, type: string}>> {
+export async function searchContent(
+    query: string,
+    userId: string
+): Promise<Array<{ text: string; title: string; score: number; link: string; type: string }>> {
     try {
         const queryEmbedding = await generateEmbedding(query);
 
-        const results = await getPineconeIndex().query({
+        const data: any = await pineconeRequest("/query", {
             vector: queryEmbedding,
             topK: 5,
             filter: { userId: { $eq: userId } },
             includeMetadata: true
         });
 
-        if (!results.matches || results.matches.length === 0) {
+        if (!data.matches || data.matches.length === 0) {
             return [];
         }
 
-        return results.matches.map((match: any) => ({
+        return data.matches.map((match: any) => ({
             text: match.metadata?.text || "",
             title: match.metadata?.title || "Untitled",
             score: match.score || 0,
@@ -136,11 +149,15 @@ export async function searchContent(query: string, userId: string): Promise<Arra
     }
 }
 
-export async function generateAnswer(query: string, contexts: Array<{text: string, title: string}>): Promise<string> {
-    try {
-        const contextBlock = contexts.map(c => `---\nTitle: ${c.title}\nContent: ${c.text}\n---`).join("\n");
+export async function generateAnswer(
+    query: string,
+    contexts: Array<{ text: string; title: string }>
+): Promise<string> {
+    const contextBlock = contexts
+        .map(c => `---\nTitle: ${c.title}\nContent: ${c.text}\n---`)
+        .join("\n");
 
-        const prompt = `You are a helpful assistant that answers questions based on the user's saved content in their Second Brain.
+    const prompt = `You are a helpful assistant that answers questions based on the user's saved content in their Second Brain.
 
 Here is the relevant content from the user's saved items:
 
@@ -150,11 +167,21 @@ Based on the above content, answer this question: ${query}
 
 If the content doesn't contain enough information to answer the question, say so honestly. Don't make stuff up.`;
 
-        const model = getGenAI().getGenerativeModel({ model: "gemini-2.5-flash" });
-        const result = await model.generateContent(prompt);
-        return result.response.text();
-    } catch (err) {
-        console.error("generateAnswer failed:", err);
-        throw err;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+        })
+    });
+
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Gemini generate failed (${res.status}): ${err}`);
     }
+
+    const data: any = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate an answer.";
 }

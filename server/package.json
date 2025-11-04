@@ -4,12 +4,10 @@
   "main": "index.js",
   "scripts": {
     "build": "npm install && tsc",
-    "start": "node --max-old-space-size=2048 build/index.js",
-    "dev": "tsc && node --max-old-space-size=2048 build/index.js"
+    "start": "node build/index.js",
+    "dev": "tsc && node build/index.js"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "@pinecone-database/pinecone": "^7.2.0",
     "axios": "^1.16.0",
     "bcrypt": "^5.1.1",
     "cheerio": "^1.2.0",

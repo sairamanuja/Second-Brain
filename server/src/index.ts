@@ -19,12 +19,7 @@ dotenv.config();
 // TODO: move this to a background job later (bull/agenda)
 async function processContent(contentId: string, userId: string, link: string, type: string, title: string) {
     console.log("processing content for embedding:", contentId);
-    let text = await extractContent(link, type, title);
-    // cap at 5k chars (~10 chunks) — full transcripts cause OOM, 5k is enough for RAG
-    if (text.length > 5000) {
-        console.log(`text too long (${text.length} chars), truncating to 5000`);
-        text = text.slice(0, 5000);
-    }
+    const text = await extractContent(link, type, title);
     await indexContent(contentId, userId, text, title, link, type);
     await Content.updateOne({ _id: contentId }, { embedded: true });
     console.log("embedding done for:", contentId);
