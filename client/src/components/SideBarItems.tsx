@@ -8,7 +8,7 @@ export function SideBarItems({text,icon,onclick}:{
 
     return(
     <div 
-        className="flex text-gray-700 cursor-pointer hover:bg-gray-200 rounded max-w-48 pl-4 transition-all duration-150 gap-2 p-2"
+        className="flex text-gray-700 cursor-pointer hover:bg-gradient-to-r hover:from-purple-100 hover:to-pink-100 rounded-lg max-w-48 pl-4 transition-all duration-200 gap-2 p-2 hover:scale-105"
         onClick={onclick}
     >
         <div className="pr-2">

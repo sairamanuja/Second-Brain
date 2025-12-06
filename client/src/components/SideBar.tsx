@@ -21,28 +21,38 @@ export const SideBar: React.FC<SideBarProps> = ({ onSelectType }) => {
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? (
-          <XIcon className="h-6 w-6 text-gray-700" />
-        ) : (
+      {/* Mobile menu button - only show when sidebar is closed */}
+      {!isOpen && (
+        <button
+          className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md"
+          onClick={() => setIsOpen(true)}
+        >
           <MenuIcon className="h-6 w-6 text-gray-700" />
-        )}
-      </button>
+        </button>
+      )}
 
       {/* Sidebar */}
       <div
-        className={`h-screen bg-white border-r w-72 fixed left-0 top-0 pl-6 transition-all duration-300 z-40
+        className={`h-screen bg-gradient-to-b from-white via-purple-50 to-pink-50 border-r border-purple-200 w-72 fixed left-0 top-0 pl-6 pr-6 transition-all duration-300 z-40 shadow-xl
           ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
       >
-        <div className="flex text-2xl pt-8 items-center" onClick={() => handleTypeSelect("")}>
-          <div className="pr-2 text-purple-600 cursor-pointer">
-            <Logo />
+        <div className="flex text-2xl pt-8 items-center justify-between" onClick={() => handleTypeSelect("")}>
+          <div className="flex items-center">
+            <div className="pr-2 text-purple-600 cursor-pointer">
+              <Logo />
+            </div>
+            <p className="font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Brainly</p>
           </div>
-          <p>Brainly</p>
+          {/* Close button for mobile */}
+          <button
+            className="md:hidden p-1 rounded-md hover:bg-purple-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(false);
+            }}
+          >
+            <XIcon className="h-6 w-6 text-gray-700" />
+          </button>
         </div>
         <div className="pt-8 pl-4">
           <SideBarItems text="Twitter" icon={<TwitterIcon />} onclick={() => handleTypeSelect('twitter')} />

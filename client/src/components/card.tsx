@@ -59,9 +59,9 @@ export function Card({ title, link, type, content, id, onDelete }: CardProps) {
     }
 
     return (
-        <div key={id}>
+        <div key={id} className="w-full">
             {/* Card Container */}
-            <div className="p-4 bg-white rounded-md border-gray-200 max-w-72 border min-h-48 min-w-72">
+            <div className="p-4 bg-white rounded-xl border-2 border-purple-100 min-h-48 w-full shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105">
                 {/* Header Section */}
                 <div className="flex justify-between">
                     {/* Left Section: Title with Icon */}
@@ -83,9 +83,9 @@ export function Card({ title, link, type, content, id, onDelete }: CardProps) {
                         </div>
                     </div>
                 </div>
-                <div className="pt-2 ">
+                <div className="pt-2">
                         {/* Content Section */}
-                        <p className="overflow-auto">{content}</p>
+                        <p className="overflow-auto break-words">{content}</p>
                     </div>
 
                 {/* Content Section */}
