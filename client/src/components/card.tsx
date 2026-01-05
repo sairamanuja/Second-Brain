@@ -5,12 +5,15 @@ import axios from 'axios';
 import { BACKEND_URL } from "../config";
 
 interface CardProps {
-    title: string; // Title of the card, e.g., video or tweet title
+    title: string;
     link: string;
     content: string;
-    type: "twitter" | "youtube" | "document"; // Type of the content
+    type: "twitter" | "youtube" | "document";
     id: string;
-    onDelete?: () => void; // Optional callback for when content is deleted
+    summary?: string;
+    tags?: string[];
+    onDelete?: () => void;
+    onTagClick?: (tag: string) => void;
 }
 
 
@@ -33,8 +36,7 @@ const TwitterEmbed = ({ link }: { link: string }) => {
     );
 };
 
-// The Card component represents a styled card that can display either a YouTube video or a Twitter embed based on the type prop.
-export function Card({ title, link, type, content, id, onDelete }: CardProps) {
+export function Card({ title, link, type, content, id, summary, tags, onDelete, onTagClick }: CardProps) {
 
     async function deleteCard(id: string) {
         console.log("Card deleted:", { title, link, type, content, id });
@@ -85,9 +87,29 @@ export function Card({ title, link, type, content, id, onDelete }: CardProps) {
                     </div>
                 </div>
                 <div className="pt-2">
-                        {/* Content Section */}
-                        <p className="overflow-auto break-words">{content}</p>
+                    <p className="overflow-auto break-words">{content}</p>
+                </div>
+
+                {summary && (
+                    <p className="text-sm text-gray-500 mt-2 line-clamp-3">{summary}</p>
+                )}
+
+                {tags && tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                        {tags.map((tag: string) => (
+                            <span
+                                key={tag}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onTagClick?.(tag);
+                                }}
+                                className="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 cursor-pointer hover:bg-indigo-100"
+                            >
+                                {tag}
+                            </span>
+                        ))}
                     </div>
+                )}
 
                 {/* Content Section */}
                 <div className="pt-4">

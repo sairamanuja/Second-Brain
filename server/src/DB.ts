@@ -24,21 +24,16 @@ export const User = mongoose.model("User", UserSchema);
 
 const ContentSchema = new mongoose.Schema({
     title: {type: String, required: true},
-    content: {type: String, required: true},
+    content: {type: String, default: ""},
     type: {type: String, required: true},
-    tags: [{type: mongoose.Schema.Types.ObjectId, ref: "tag"}],
+    tags: [String],              // auto-generated string tags
+    summary: {type: String},     // AI generated summary
     link: {type: String},
-    userId:[ {type: mongoose.Schema.Types.ObjectId, ref: "User", required: true}],
-    embedded: {type: Boolean, default: false}  // track if content has been embedded into pinecone
+    userId: [{type: mongoose.Schema.Types.ObjectId, ref: "User", required: true}],
+    embedded: {type: Boolean, default: false}
 });
 
 export const Content = mongoose.model("Content", ContentSchema);
-
-const TagSchema = new mongoose.Schema({
-    title: { type: String, required: true, unique: true }
-  });
-  
-  export const Tag = mongoose.model('Tag', TagSchema);
 
   const linkSchema = new mongoose.Schema({
     hash: { type: String, required: true },

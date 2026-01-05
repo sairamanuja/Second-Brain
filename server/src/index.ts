@@ -12,7 +12,17 @@ import cors from "cors";
 import { Request, Response } from "express";
 import { extractContent } from "./services/extractor";
 import { indexContent, searchContent, generateAnswer } from "./services/embedding";
-app.use(cors({ origin: "http://localhost:5173" }));
+import { generateSummaryAndTags } from "./services/ai";
+app.use(cors({
+    origin: (origin, callback) => {
+        // allow frontend, chrome extension, and direct API calls (no origin)
+        if (!origin || origin === "http://localhost:5173" || origin?.startsWith("chrome-extension://")) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    }
+}));
 
 dotenv.config();
 
@@ -20,6 +30,12 @@ dotenv.config();
 async function processContent(contentId: string, userId: string, link: string, type: string, title: string) {
     console.log("processing content for embedding:", contentId);
     const text = await extractContent(link, type, title);
+
+    // generate summary + tags before embedding — both use the same extracted text
+    const { summary, tags } = await generateSummaryAndTags(text);
+    await Content.updateOne({ _id: contentId }, { summary, tags });
+    console.log("summary and tags saved for:", contentId);
+
     await indexContent(contentId, userId, text, title, link, type);
     await Content.updateOne({ _id: contentId }, { embedded: true });
     console.log("embedding done for:", contentId);
@@ -111,7 +127,7 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
     const schema = z.object({
         link: z.string().url(),
         type: z.string(),
-        content: z.string(),
+        content: z.string().optional().default(""),
         title: z.string().min(1)
     });
     
