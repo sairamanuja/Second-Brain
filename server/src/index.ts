@@ -13,10 +13,14 @@ import { Request, Response } from "express";
 import { extractContent } from "./services/extractor";
 import { indexContent, searchContent, generateAnswer } from "./services/embedding";
 import { generateSummaryAndTags } from "./services/ai";
+const ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL || ""
+].filter(Boolean);
+
 app.use(cors({
     origin: (origin, callback) => {
-        // allow frontend, chrome extension, and direct API calls (no origin)
-        if (!origin || origin === "http://localhost:5173" || origin?.startsWith("chrome-extension://")) {
+        if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.startsWith("chrome-extension://")) {
             callback(null, true);
         } else {
             callback(new Error("Not allowed by CORS"));

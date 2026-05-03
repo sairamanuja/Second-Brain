@@ -1,5 +1,5 @@
 // using raw fetch instead of SDKs — SDKs consumed too much memory on startup
-// gemini-embedding-001 with outputDimensionality=768 matches pinecone index
+// gemini-embedding-001 with outputDimensionality=1024 matches pinecone index
 // gemini-2.5-flash for generation (2.0-flash not available for new users)
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
@@ -14,7 +14,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             content: { parts: [{ text }] },
-            outputDimensionality: 768
+            outputDimensionality: 1024
         })
     });
 
