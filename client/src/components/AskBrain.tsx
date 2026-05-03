@@ -171,9 +171,9 @@ export function AskBrain({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
-      {/* desktop: inline sidebar panel, slides in */}
+      {/* desktop: inline panel — h-full fills the h-screen parent in DashBoard */}
       <div
-        className={`hidden md:flex flex-col w-80 shrink-0 h-screen sticky top-0 shadow-xl transition-all duration-300 overflow-hidden
+        className={`hidden md:flex flex-col shrink-0 h-full shadow-xl transition-all duration-300 overflow-hidden
           ${visible ? "w-80 opacity-100" : "w-0 opacity-0"}`}
       >
         {panel}

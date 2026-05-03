@@ -80,11 +80,11 @@ export function DashBoard() {
           onDesktopToggle={() => setSidebarOpen(v => !v)}
         />
 
-        {/* everything right of the sidebar — margin collapses when sidebar is closed */}
-        <div className={`flex flex-1 min-h-screen overflow-hidden transition-all duration-300 ${sidebarOpen ? "md:ml-72" : "md:ml-0"}`}>
+        {/* everything right of the sidebar — fixed height so panel and content both fill viewport */}
+        <div className={`flex flex-1 h-screen overflow-hidden transition-all duration-300 ${sidebarOpen ? "md:ml-72" : "md:ml-0"}`}>
 
-          {/* main content scrolls independently */}
-          <main className="flex-1 p-4 pt-16 md:pt-4 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 overflow-y-auto min-h-screen">
+          {/* main content scrolls independently within its column */}
+          <main className="flex-1 p-4 pt-16 md:pt-4 bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 overflow-y-auto">
 
             <CreateContentModal open={isOpen} onClose={handleClose} onContentAdded={handleContentAdded} />
 
